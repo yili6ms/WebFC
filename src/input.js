@@ -38,13 +38,14 @@ export function readGamepad(pad) {
 }
 
 /**
- * Combines keyboard and gamepad sources and forwards only changes to the
+ * Combines keyboard, gamepad and touch sources and forwards only changes to the
  * emulator. Opposing directions cancel to neutral, as on the native frontend.
  */
 export class InputState {
   #apply;
   #keys = new Set();
   #gamepad = new Set();
+  #touch = new Set();
   #applied = new Set();
 
   /** @param {(button: string, pressed: boolean) => void} apply */
@@ -72,9 +73,15 @@ export class InputState {
     this.sync();
   }
 
+  setTouch(buttons) {
+    this.#touch = new Set(buttons);
+    this.sync();
+  }
+
   releaseAll() {
     this.#keys.clear();
     this.#gamepad.clear();
+    this.#touch.clear();
     this.sync();
   }
 
@@ -85,7 +92,7 @@ export class InputState {
   }
 
   get held() {
-    const held = new Set(this.#gamepad);
+    const held = new Set([...this.#gamepad, ...this.#touch]);
     for (const code of this.#keys) held.add(KEY_BINDINGS[code]);
     for (const [a, b] of [["Up", "Down"], ["Left", "Right"]]) {
       if (held.has(a) && held.has(b)) {

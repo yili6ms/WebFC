@@ -5,6 +5,7 @@ import { createDisplay } from "./display.js";
 import { InputState, readGamepad } from "./input.js";
 import { readRomFile } from "./rom.js";
 import { FrameRunner } from "./runner.js";
+import { TouchControls } from "./touch.js";
 
 const $ = (selector) => document.querySelector(selector);
 const ui = {
@@ -15,7 +16,7 @@ const ui = {
   filter: $("#filter"),
   integer: $("#integer"),
   fullscreen: $("#fullscreen"),
-  screen: $("#screen"),
+  stage: $("#stage"),
   romName: $("#rom-name"),
   state: $("#state"),
   fps: $("#fps"),
@@ -25,7 +26,9 @@ $("#core-version").textContent = coreVersion.trim().slice(0, 7);
 
 const settings = {
   filter: localStorage.getItem("webfc.filter") ?? "nearest",
-  integerScale: localStorage.getItem("webfc.integerScale") !== "false",
+  // Small touch screens lose too much area to whole-number scaling, so default it off there.
+  integerScale: (localStorage.getItem("webfc.integerScale")
+    ?? String(!matchMedia("(pointer: coarse)").matches)) === "true",
 };
 if (![...ui.filter.options].some((option) => option.value === settings.filter)) {
   settings.filter = "nearest";
@@ -76,6 +79,20 @@ const runner = new FrameRunner({
 });
 
 const input = new InputState((button, pressed) => emulator.setButton(Button[button], pressed));
+const touch = new TouchControls($("#touch"), (held) => input.setTouch(held));
+
+// Show the on-screen controller on touch-first devices, or once any touch is seen.
+const coarsePointer = matchMedia("(pointer: coarse)");
+function enableTouchUi(enabled) {
+  document.body.classList.toggle("touch", enabled);
+  // Mobile pickers often grey out files whose extension has no registered type.
+  if (enabled) ui.file.removeAttribute("accept");
+}
+enableTouchUi(coarsePointer.matches);
+coarsePointer.addEventListener("change", (event) => event.matches && enableTouchUi(true));
+window.addEventListener("pointerdown", (event) => {
+  if (event.pointerType === "touch") enableTouchUi(true);
+}, { capture: true, passive: true });
 
 function updateState() {
   ui.pause.disabled = faulted;
@@ -137,9 +154,20 @@ function onClick(button, action) {
 onClick(ui.open, () => ui.file.click());
 onClick(ui.pause, () => setRunning(!runner.running));
 onClick(ui.reset, reset);
-onClick(ui.fullscreen, () => {
-  if (document.fullscreenElement) document.exitFullscreen();
-  else ui.screen.requestFullscreen?.().catch(() => {});
+// iPhone Safari has no element fullscreen; installing to the home screen covers it.
+if (!document.fullscreenEnabled) ui.fullscreen.hidden = true;
+onClick(ui.fullscreen, async () => {
+  if (document.fullscreenElement) {
+    await document.exitFullscreen().catch(() => {});
+    return;
+  }
+  try {
+    // The stage holds the screen and the touch controller, so both stay visible.
+    await ui.stage.requestFullscreen({ navigationUI: "hide" });
+    if (document.body.classList.contains("touch")) await screen.orientation?.lock?.("landscape");
+  } catch {
+    // Orientation lock is unsupported on many devices; fullscreen still applies.
+  }
 });
 
 ui.file.addEventListener("change", () => {
@@ -202,9 +230,13 @@ window.addEventListener("keyup", (event) => {
   if (input.keyUp(event.code)) event.preventDefault();
 });
 
-window.addEventListener("blur", () => input.releaseAll());
+function releaseInputs() {
+  touch.releaseAll();
+  input.releaseAll();
+}
+window.addEventListener("blur", releaseInputs);
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden) input.releaseAll();
+  if (document.hidden) releaseInputs();
   else runner.resync();
 });
 

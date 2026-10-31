@@ -2,10 +2,17 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="description" content="Play Famicom / NES ROMs from your computer in the browser, powered by the VisualFC WebAssembly core." />
     <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#171a21" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="WebFC" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <title>WebFC — Famicom in your browser</title>
   </head>
   <body>
@@ -29,10 +36,25 @@
     </header>
 
     <main class="layout">
-      <section id="screen" class="screen" aria-label="Game screen">
-        <canvas id="game" width="256" height="240"></canvas>
-        <div class="drop-overlay" aria-hidden="true">Drop a .nes file to play</div>
-      </section>
+      <div id="stage" class="stage">
+        <section id="screen" class="screen" aria-label="Game screen">
+          <canvas id="game" width="256" height="240"></canvas>
+          <div class="drop-overlay" aria-hidden="true">Drop a .nes file to play</div>
+        </section>
+
+        <div id="touch" class="touch-controls" aria-label="On-screen controller">
+          <div class="dpad" role="group" aria-label="D-pad">
+            <span class="arm up"></span><span class="arm down"></span>
+            <span class="arm left"></span><span class="arm right"></span>
+          </div>
+          <div class="face">
+            <button type="button" class="pad-button" data-button="B" aria-label="B">B</button>
+            <button type="button" class="pad-button" data-button="A" aria-label="A">A</button>
+          </div>
+          <button type="button" class="pill select" data-button="Select">SELECT</button>
+          <button type="button" class="pill start" data-button="Start">START</button>
+        </div>
+      </div>
 
       <aside class="panel">
         <dl class="status">
@@ -54,6 +76,8 @@
           </tbody>
         </table>
         <p class="note">USB / Bluetooth gamepads work too: bottom face button = A, right = B.</p>
+        <p class="note">On touch screens, use the on-screen controller; slide between buttons, or press
+          between A and B to hold both. Add WebFC to your home screen for a full-screen app.</p>
 
         <h2>About</h2>
         <p class="note">

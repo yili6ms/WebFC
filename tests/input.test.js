@@ -40,3 +40,12 @@ test("reads standard-mapped gamepads with a stick dead zone", () => {
   const held = readGamepad({ buttons, axes: [0.9, -0.2] });
   assert.deepEqual([...held].sort(), ["B", "Right", "Start"]);
 });
+
+test("touch combines with keyboard and is cleared by releaseAll", () => {
+  const { events, input } = recorder();
+  input.setTouch(["B", "Up"]);
+  input.keyDown("KeyZ");
+  input.setTouch(["Up"]);
+  input.releaseAll();
+  assert.deepEqual(events, ["B:true", "Up:true", "B:false", "Up:false"]);
+});
