@@ -1,0 +1,201 @@
+:root {
+  --bg: #0f1115;
+  --panel: #171a21;
+  --border: #2a2f3a;
+  --text: #e6e8ee;
+  --muted: #9aa3b2;
+  --accent: #e4002b;
+  --accent-hover: #ff2a4f;
+  --ok: #3ccf7a;
+  --warn: #f2b83c;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.brand {
+  margin: 0;
+  font-size: 1.4rem;
+  letter-spacing: 0.04em;
+}
+
+.brand span { color: var(--accent); }
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+button, select {
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--text);
+  background: #232833;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled), select:hover:not(:disabled) { border-color: var(--muted); }
+button:disabled, select:disabled { opacity: 0.5; cursor: not-allowed; }
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+button.primary:hover { background: var(--accent-hover); }
+
+.field {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 1.25rem;
+  padding: 1.25rem;
+}
+
+.screen {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  background: #000;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.screen canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: calc(100vh - 10rem);
+  aspect-ratio: 256 / 240;
+  object-fit: contain;
+}
+
+.screen canvas.pixelated {
+  width: auto;
+  max-width: 100%;
+  image-rendering: pixelated;
+}
+
+.screen:fullscreen canvas { max-height: 100vh; }
+
+.drop-overlay {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: 600;
+  background: rgb(228 0 43 / 0.25);
+  border: 3px dashed var(--accent);
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+body.dragging .drop-overlay { display: flex; }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.1rem;
+  font-size: 0.9rem;
+}
+
+.panel h2 {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.status {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem 0.9rem;
+  margin: 0;
+}
+
+.status dt { color: var(--muted); }
+.status dd { margin: 0; overflow-wrap: anywhere; }
+#state[data-state="running"] { color: var(--ok); }
+#state[data-state="paused"] { color: var(--warn); }
+#state[data-state="faulted"] { color: var(--accent-hover); }
+
+.message {
+  min-height: 1.2em;
+  margin: 0.9rem 0 0;
+  color: var(--muted);
+}
+
+.message.error { color: var(--accent-hover); }
+
+.controls { border-collapse: collapse; width: 100%; }
+.controls th { text-align: left; font-weight: 500; color: var(--muted); padding: 0.25rem 0.5rem 0.25rem 0; white-space: nowrap; }
+.controls td { padding: 0.25rem 0; }
+
+kbd {
+  display: inline-block;
+  min-width: 1.5em;
+  margin: 0 0.1em;
+  padding: 0.05em 0.35em;
+  font: 0.8rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  text-align: center;
+  background: #232833;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+}
+
+.note { color: var(--muted); line-height: 1.45; margin: 0.5rem 0 0; }
+
+.footer {
+  padding: 0.75rem 1.25rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+}
+
+a { color: var(--text); }
+
+@media (max-width: 860px) {
+  .layout { grid-template-columns: 1fr; }
+  .screen canvas { max-height: 70vh; }
+}

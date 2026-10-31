@@ -1,0 +1,20 @@
+{
+  "name": "webfc",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Browser Famicom / NES player powered by the VisualFC WebAssembly core",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "build:core": "bash scripts/build-core.sh",
+    "test": "node --test tests/"
+  },
+  "engines": {
+    "node": ">=20.19"
+  },
+  "devDependencies": {
+    "vite": "^8.3.5"
+  }
+}

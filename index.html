@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Play Famicom / NES ROMs from your computer in the browser, powered by the VisualFC WebAssembly core." />
+    <meta name="color-scheme" content="dark" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>WebFC — Famicom in your browser</title>
+  </head>
+  <body>
+    <header class="topbar">
+      <h1 class="brand">Web<span>FC</span></h1>
+      <nav class="toolbar" aria-label="Emulator controls">
+        <button id="open" class="primary" type="button" title="Open a .nes file (Ctrl/⌘+O)">Open ROM…</button>
+        <input id="file" type="file" accept=".nes,application/octet-stream" hidden />
+        <button id="pause" type="button" title="Pause / resume (Space)" disabled>Pause</button>
+        <button id="reset" type="button" title="Power-cycle the cartridge" disabled>Reset</button>
+        <label class="field">Filter
+          <select id="filter">
+            <option value="nearest">Pixel</option>
+            <option value="xbr">Smooth (xBR)</option>
+            <option value="crt">CRT</option>
+          </select>
+        </label>
+        <label class="field check"><input id="integer" type="checkbox" checked /> Integer scale</label>
+        <button id="fullscreen" type="button" title="Fullscreen">Fullscreen</button>
+      </nav>
+    </header>
+
+    <main class="layout">
+      <section id="screen" class="screen" aria-label="Game screen">
+        <canvas id="game" width="256" height="240"></canvas>
+        <div class="drop-overlay" aria-hidden="true">Drop a .nes file to play</div>
+      </section>
+
+      <aside class="panel">
+        <dl class="status">
+          <dt>Cartridge</dt><dd id="rom-name">Loading core…</dd>
+          <dt>State</dt><dd id="state">—</dd>
+          <dt>Speed</dt><dd id="fps">—</dd>
+        </dl>
+        <p id="message" class="message" role="status" aria-live="polite"></p>
+
+        <h2>Controls</h2>
+        <table class="controls">
+          <tbody>
+            <tr><th>D-pad</th><td><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> or <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></td></tr>
+            <tr><th>A / B</th><td><kbd>X</kbd> / <kbd>Z</kbd> or <kbd>K</kbd> / <kbd>J</kbd></td></tr>
+            <tr><th>Start</th><td><kbd>Enter</kbd></td></tr>
+            <tr><th>Select</th><td><kbd>Shift</kbd></td></tr>
+            <tr><th>Pause</th><td><kbd>Space</kbd></td></tr>
+            <tr><th>Open ROM</th><td><kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>O</kbd> or drag &amp; drop</td></tr>
+          </tbody>
+        </table>
+        <p class="note">USB / Bluetooth gamepads work too: bottom face button = A, right = B.</p>
+
+        <h2>About</h2>
+        <p class="note">
+          ROMs are read locally and never leave your device. Supported boards: iNES mapper
+          0 (NROM), 2 (UxROM) and 3 (CNROM), NTSC. Audio and save states are not yet
+          implemented by the core.
+        </p>
+      </aside>
+    </main>
+
+    <footer class="footer">
+      Emulation by the <a href="https://github.com/yili6ms/VisualFC" target="_blank" rel="noopener">VisualFC</a>
+      core <code id="core-version"></code>, compiled to WebAssembly.
+    </footer>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
