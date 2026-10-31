@@ -5,7 +5,7 @@ A browser Famicom / NES player deployable to [Vercel](https://vercel.com). Emula
 GPU by VisualFC's WebGL2 renderer (pixel, xBR-style smoothing or CRT), with a Canvas 2D fallback.
 
 - Load `.nes` files from your computer or phone with **Open ROM…**, <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>O</kbd>, or drag and drop. ROMs are read in the browser and never uploaded.
-- Starts with VisualFC's built-in homebrew demo, so no ROM is required.
+- Includes free homebrew games under **Games**, so you can play right away (see below).
 - Keyboard and USB/Bluetooth gamepad input (W3C standard mapping), pause/resume, reset, fullscreen.
 - Supported cartridges are those of the core: NTSC iNES mapper 0 (NROM), 2 (UxROM) and 3 (CNROM). Audio, save states and SRAM persistence are not implemented by the core.
 
@@ -25,6 +25,26 @@ buttons, the D-pad keeps steering if your thumb drifts off it, and pressing betw
 (Android also gives a short vibration). **Fullscreen** includes the controller and locks landscape where
 supported. iPhone Safari has no element fullscreen, so use **Share → Add to Home Screen**: the web app
 manifest opens WebFC full screen. Integer scaling defaults to off on touch screens to use more of the display.
+
+## Included games
+
+The **Games** dialog opens on your first visit. It lists VisualFC's built-in demo and these
+redistributable homebrew ROMs, which are stored unmodified in `public/roms/`:
+
+| Game | Author | License |
+| --- | --- | --- |
+| [Falling](https://github.com/tragicmuffin/falling-nes) | tragicmuffin | MIT |
+| [Lunar Limit](https://github.com/pubby/lunarlimit) | Pubby | MIT |
+| [RALPH 4](https://github.com/pubby/Ralph-4) | Pubby | MIT |
+| [Star Evil](https://forums.nesdev.org/viewtopic.php?t=16993) | Pubby | MIT |
+| [Concentration Room](https://github.com/pinobatch/croom-nes) | Damian Yerrick | GPL-3.0+ with an exception for unmodified ROMs |
+| [robotfindskitten](https://github.com/pinobatch/rfk-nes) | Damian Yerrick | zlib |
+
+The full license notices are in [`public/roms/LICENSES.txt`](public/roms/LICENSES.txt), which the app links to.
+Bundled games can be linked directly, e.g. `/?game=falling`. To add a game, confirm that its license allows
+redistribution and that it runs on the core (mapper 0/2/3, NTSC, iNES 1.0 header). Then put `<id>.nes` and a
+256×240 `<id>.png` title screenshot in `public/roms/`, add the notice to `LICENSES.txt`, and add an entry to
+`src/library.js`. `npm test` boots every listed ROM on the bundled core.
 
 ## Development
 
@@ -68,3 +88,4 @@ The script prefers the rustup toolchain's `cargo`, since other installs (e.g. Ho
 | `src/touch.js` | Multi-touch on-screen controller and D-pad direction mapping |
 | `src/display.js` | WebGL2 renderer with Canvas 2D fallback and context-loss handling |
 | `src/rom.js` | Local file reading and iNES header check |
+| `src/library.js` | Bundled game list (metadata, ROM and thumbnail paths) |

@@ -3,13 +3,18 @@ import init, { Button, Emulator } from "./core/visual_fc.js";
 import coreVersion from "./core/VERSION?raw";
 import { createDisplay } from "./display.js";
 import { InputState, readGamepad } from "./input.js";
+import { DEMO_ID, GAMES, findGame, romUrl, thumbnailUrl } from "./library.js";
 import { readRomFile } from "./rom.js";
 import { FrameRunner } from "./runner.js";
 import { TouchControls } from "./touch.js";
 
 const $ = (selector) => document.querySelector(selector);
 const ui = {
+  games: $("#games"),
   open: $("#open"),
+  library: $("#library"),
+  libraryList: $("#library-list"),
+  libraryOpen: $("#library-open"),
   file: $("#file"),
   pause: $("#pause"),
   reset: $("#reset"),
@@ -114,6 +119,24 @@ function setCartridge(name) {
   document.title = `${name} — WebFC`;
 }
 
+let currentGameId = DEMO_ID;
+
+function startCartridge(name, message, gameId = null) {
+  faulted = false;
+  input.reapply();
+  setCartridge(name);
+  showMessage(message);
+  present();
+  runner.stop();
+  setRunning(true);
+  currentGameId = gameId;
+  // Bundled games get a shareable ?game= link; local files cannot be linked.
+  const url = new URL(location.href);
+  if (gameId && gameId !== DEMO_ID) url.searchParams.set("game", gameId);
+  else url.searchParams.delete("game");
+  history.replaceState(null, "", url);
+}
+
 async function loadFile(file) {
   if (!file) return;
   try {
@@ -124,13 +147,62 @@ async function loadFile(file) {
     showMessage(`Could not load ${file.name}: ${error.message}`, true);
     return;
   }
-  faulted = false;
-  input.reapply();
-  setCartridge(file.name);
-  showMessage(`Loaded ${file.name}.`);
-  present();
-  runner.stop();
-  setRunning(true);
+  startCartridge(file.name, `Loaded ${file.name}.`);
+}
+
+async function loadGame(game) {
+  try {
+    if (game.builtIn) {
+      const demo = Emulator.demo();
+      emulator.free();
+      emulator = demo;
+    } else {
+      const response = await fetch(romUrl(game));
+      if (!response.ok) throw new Error(`download failed (HTTP ${response.status})`);
+      emulator.loadRom(new Uint8Array(await response.arrayBuffer()));
+    }
+  } catch (error) {
+    showMessage(`Could not load ${game.title}: ${error.message}`, true);
+    return;
+  }
+  startCartridge(game.title, `${game.title} by ${game.author} · ${game.license}`, game.id);
+}
+
+function renderLibrary() {
+  ui.libraryList.replaceChildren(...GAMES.map((game) => {
+    const item = document.createElement("li");
+    item.className = "game-card";
+    if (game.id === currentGameId) item.setAttribute("aria-current", "true");
+
+    const play = document.createElement("button");
+    play.type = "button";
+    play.className = "game-play";
+    const image = Object.assign(document.createElement("img"), {
+      src: thumbnailUrl(game), alt: "", width: 256, height: 240, loading: "lazy",
+    });
+    const title = Object.assign(document.createElement("strong"), { textContent: game.title });
+    const description = Object.assign(document.createElement("span"), { textContent: game.description });
+    play.append(image, title, description);
+    play.addEventListener("click", () => {
+      ui.library.close();
+      loadGame(game);
+    });
+
+    const meta = document.createElement("p");
+    meta.className = "game-meta";
+    const source = Object.assign(document.createElement("a"), {
+      href: game.source, target: "_blank", rel: "noopener", textContent: `${game.author}, ${game.year}`,
+    });
+    meta.append(source, ` · ${game.license}`);
+    item.append(play, meta);
+    return item;
+  }));
+}
+
+function openLibrary() {
+  releaseInputs();
+  renderLibrary();
+  ui.library.showModal();
 }
 
 function reset() {
@@ -151,7 +223,16 @@ function onClick(button, action) {
   });
 }
 
+onClick(ui.games, openLibrary);
 onClick(ui.open, () => ui.file.click());
+ui.libraryOpen.addEventListener("click", () => {
+  ui.library.close();
+  ui.file.click();
+});
+// A click on the backdrop (the dialog element itself) dismisses it.
+ui.library.addEventListener("click", (event) => {
+  if (event.target === ui.library) ui.library.close();
+});
 onClick(ui.pause, () => setRunning(!runner.running));
 onClick(ui.reset, reset);
 // iPhone Safari has no element fullscreen; installing to the home screen covers it.
@@ -212,6 +293,7 @@ window.addEventListener("drop", (event) => {
 const isFormField = (target) => target instanceof HTMLElement && target.matches("input, select, textarea");
 
 window.addEventListener("keydown", (event) => {
+  if (ui.library.open) return;
   if ((event.ctrlKey || event.metaKey) && event.code === "KeyO") {
     event.preventDefault();
     ui.file.click();
@@ -275,7 +357,16 @@ setInterval(() => {
   ui.fps.textContent = runner.running ? `${frames} fps` : "—";
 }, 1000);
 
-setCartridge("Orbital Lab (built-in demo)");
-showMessage("Open or drop a .nes file to play. ROMs stay on your device.");
+setCartridge(findGame(DEMO_ID).title);
+showMessage("Pick a free game under Games, or open your own .nes file.");
 present();
 setRunning(true);
+
+const linkedGame = findGame(new URLSearchParams(location.search).get("game") ?? "");
+if (linkedGame) {
+  loadGame(linkedGame);
+} else if (!localStorage.getItem("webfc.libraryShown")) {
+  // Introduce the bundled games once; afterwards the Games button opens them.
+  localStorage.setItem("webfc.libraryShown", "1");
+  openLibrary();
+}

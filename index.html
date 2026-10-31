@@ -19,7 +19,8 @@
     <header class="topbar">
       <h1 class="brand">Web<span>FC</span></h1>
       <nav class="toolbar" aria-label="Emulator controls">
-        <button id="open" class="primary" type="button" title="Open a .nes file (Ctrl/⌘+O)">Open ROM…</button>
+        <button id="games" class="primary" type="button" title="Browse the included free games">Games</button>
+        <button id="open" type="button" title="Open a .nes file from your device (Ctrl/⌘+O)">Open ROM…</button>
         <input id="file" type="file" accept=".nes,application/octet-stream" hidden />
         <button id="pause" type="button" title="Pause / resume (Space)" disabled>Pause</button>
         <button id="reset" type="button" title="Power-cycle the cartridge" disabled>Reset</button>
@@ -81,12 +82,29 @@
 
         <h2>About</h2>
         <p class="note">
-          ROMs are read locally and never leave your device. Supported boards: iNES mapper
+          WebFC includes free, openly licensed homebrew games under <strong>Games</strong>
+          (<a href="/roms/LICENSES.txt" target="_blank" rel="noopener">licenses</a>).
+          Your own ROMs are read locally and never leave your device. Supported boards: iNES mapper
           0 (NROM), 2 (UxROM) and 3 (CNROM), NTSC. Audio and save states are not yet
           implemented by the core.
         </p>
       </aside>
     </main>
+
+    <dialog id="library" class="library" aria-labelledby="library-title">
+      <header class="library-head">
+        <h2 id="library-title">Games</h2>
+        <form method="dialog"><button class="icon" value="close" aria-label="Close">✕</button></form>
+      </header>
+      <p class="note">
+        Free homebrew games bundled with WebFC, shared under their authors' open licenses
+        (<a href="/roms/LICENSES.txt" target="_blank" rel="noopener">details</a>).
+      </p>
+      <ul id="library-list" class="library-grid"></ul>
+      <footer class="library-foot">
+        <button id="library-open" type="button">Open your own ROM…</button>
+      </footer>
+    </dialog>
 
     <footer class="footer">
       Emulation by the <a href="https://github.com/yili6ms/VisualFC" target="_blank" rel="noopener">VisualFC</a>
