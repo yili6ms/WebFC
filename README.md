@@ -61,6 +61,9 @@ npm run build    # production build in dist/
 
 The project is a static Vite site; `vercel.json` sets the build command and output directory.
 Import the repository in Vercel (framework preset **Vite**) or run `npx vercel --prod`.
+[Vercel Speed Insights](https://vercel.com/docs/speed-insights) (`@vercel/speed-insights`) reports Core Web Vitals
+from production builds; enable it under the project's **Speed Insights** tab. In `npm run dev` it loads a debug script that
+only logs to the console and sends nothing. Outside Vercel (e.g. `npm run preview`) its script request returns 404, which is harmless.
 No Rust toolchain is needed at deploy time, because the compiled core is committed in `src/core/`.
 
 ## Updating the VisualFC core

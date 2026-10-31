@@ -1,4 +1,5 @@
 import "./style.css";
+import { injectSpeedInsights } from "@vercel/speed-insights";
 import init, { Button, Emulator } from "./core/visual_fc.js";
 import coreVersion from "./core/VERSION?raw";
 import { createDisplay } from "./display.js";
@@ -7,6 +8,9 @@ import { DEMO_ID, GAMES, findGame, romUrl, thumbnailUrl } from "./library.js";
 import { readRomFile } from "./rom.js";
 import { FrameRunner } from "./runner.js";
 import { TouchControls } from "./touch.js";
+
+// Web-vitals reporting for Vercel deployments; dev builds only log locally.
+injectSpeedInsights();
 
 const $ = (selector) => document.querySelector(selector);
 const ui = {
