@@ -140,6 +140,22 @@ button.primary:hover { background: var(--accent-hover); }
 
 body.dragging .drop-overlay { display: flex; }
 
+.stats-overlay {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  font: 600 0.72rem/1.35 ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: pre;
+  color: #7dff9b;
+  background: rgb(0 0 0 / 0.6);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+#pressure[data-state="fair"] { color: var(--warn); }
+#pressure[data-state="serious"], #pressure[data-state="critical"] { color: var(--accent-hover); }
+
 .panel {
   background: var(--panel);
   border: 1px solid var(--border);

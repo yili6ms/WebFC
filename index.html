@@ -32,6 +32,7 @@
           </select>
         </label>
         <label class="field check"><input id="integer" type="checkbox" checked /> Integer scale</label>
+        <label class="field check" title="Show live FPS and CPU on the screen"><input id="show-stats" type="checkbox" checked /> Stats</label>
         <button id="fullscreen" type="button" title="Fullscreen">Fullscreen</button>
       </nav>
     </header>
@@ -40,6 +41,7 @@
       <div id="stage" class="stage">
         <section id="screen" class="screen" aria-label="Game screen">
           <canvas id="game" width="256" height="240"></canvas>
+          <div id="stats" class="stats-overlay" aria-hidden="true"></div>
           <div class="drop-overlay" aria-hidden="true">Drop a .nes file to play</div>
         </section>
 
@@ -61,7 +63,10 @@
         <dl class="status">
           <dt>Cartridge</dt><dd id="rom-name">Loading core…</dd>
           <dt>State</dt><dd id="state">—</dd>
-          <dt>Speed</dt><dd id="fps">—</dd>
+          <dt>FPS</dt><dd id="fps">—</dd>
+          <dt>Emulator CPU</dt><dd id="emu-cpu" title="Main-thread time spent emulating and drawing, as a share of one core">—</dd>
+          <dt>Host CPU</dt><dd id="host-cpu">—</dd>
+          <dt class="pressure" hidden>CPU pressure</dt><dd id="pressure" class="pressure" title="System-wide CPU pressure reported by the browser" hidden>—</dd>
         </dl>
         <p id="message" class="message" role="status" aria-live="polite"></p>
 

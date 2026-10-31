@@ -9,6 +9,19 @@ GPU by VisualFC's WebGL2 renderer (pixel, xBR-style smoothing or CRT), with a Ca
 - Keyboard and USB/Bluetooth gamepad input (W3C standard mapping), pause/resume, reset, fullscreen.
 - Supported cartridges are those of the core: NTSC iNES mapper 0 (NROM), 2 (UxROM) and 3 (CNROM). Audio, save states and SRAM persistence are not implemented by the core.
 
+### Performance stats
+
+A corner overlay on the game screen (toggle with **Stats**) and the side panel show live figures, measured over a
+rolling one-second window and refreshed four times a second:
+
+- **FPS:** emulated frames per second, with the average core time per frame.
+- **Emulator CPU:** main-thread time spent emulating and drawing, as a share of one core.
+- **Host CPU:** logical core count, plus architecture and OS where the browser exposes them (Chromium browsers
+  do). Web pages cannot read the CPU model or system-wide usage.
+- **CPU pressure:** system-wide `nominal` / `fair` / `serious` / `critical` state, from the
+  [Compute Pressure API](https://developer.mozilla.org/docs/Web/API/Compute_Pressure_API) in browsers that support it
+  (Chromium-based); hidden elsewhere.
+
 | Action | Keys |
 | --- | --- |
 | D-pad | Arrow keys or W A S D |
@@ -92,3 +105,4 @@ The script prefers the rustup toolchain's `cargo`, since other installs (e.g. Ho
 | `src/display.js` | WebGL2 renderer with Canvas 2D fallback and context-loss handling |
 | `src/rom.js` | Local file reading and iNES header check |
 | `src/library.js` | Bundled game list (metadata, ROM and thumbnail paths) |
+| `src/perf.js` | Rolling FPS/CPU-load meter, host CPU description and CPU pressure observer |

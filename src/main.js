@@ -5,6 +5,7 @@ import coreVersion from "./core/VERSION?raw";
 import { createDisplay } from "./display.js";
 import { InputState, readGamepad } from "./input.js";
 import { DEMO_ID, GAMES, findGame, romUrl, thumbnailUrl } from "./library.js";
+import { PerfMeter, describeHostCpu, watchCpuPressure } from "./perf.js";
 import { readRomFile } from "./rom.js";
 import { FrameRunner } from "./runner.js";
 import { TouchControls } from "./touch.js";
@@ -29,6 +30,11 @@ const ui = {
   romName: $("#rom-name"),
   state: $("#state"),
   fps: $("#fps"),
+  emuCpu: $("#emu-cpu"),
+  hostCpu: $("#host-cpu"),
+  pressure: $("#pressure"),
+  stats: $("#stats"),
+  showStats: $("#show-stats"),
   message: $("#message"),
 };
 $("#core-version").textContent = coreVersion.trim().slice(0, 7);
@@ -38,12 +44,15 @@ const settings = {
   // Small touch screens lose too much area to whole-number scaling, so default it off there.
   integerScale: (localStorage.getItem("webfc.integerScale")
     ?? String(!matchMedia("(pointer: coarse)").matches)) === "true",
+  showStats: localStorage.getItem("webfc.showStats") !== "false",
 };
 if (![...ui.filter.options].some((option) => option.value === settings.filter)) {
   settings.filter = "nearest";
 }
 ui.filter.value = settings.filter;
 ui.integer.checked = settings.integerScale;
+ui.showStats.checked = settings.showStats;
+ui.stats.hidden = !settings.showStats;
 
 function showMessage(text, isError = false) {
   ui.message.textContent = text;
@@ -76,10 +85,20 @@ function present() {
   display.draw(emulator.frameBuffer());
 }
 
+const meter = new PerfMeter();
+
 const runner = new FrameRunner({
   fps: emulator.fps,
-  step: () => emulator.runFrame(),
-  present,
+  step() {
+    const start = performance.now();
+    emulator.runFrame();
+    meter.frame(performance.now() - start);
+  },
+  present() {
+    const start = performance.now();
+    present();
+    meter.busy(performance.now() - start);
+  },
   onError(error) {
     faulted = true;
     showMessage(`Emulation stopped: ${error.message}. Reset or load another ROM.`, true);
@@ -113,8 +132,12 @@ function updateState() {
 
 function setRunning(running) {
   if (faulted) return;
-  if (running) runner.start();
-  else runner.stop();
+  if (running && !runner.running) {
+    meter.reset();
+    runner.start();
+  } else if (!running) {
+    runner.stop();
+  }
   updateState();
 }
 
@@ -323,7 +346,10 @@ function releaseInputs() {
 window.addEventListener("blur", releaseInputs);
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) releaseInputs();
-  else runner.resync();
+  else {
+    runner.resync();
+    meter.reset();
+  }
 });
 
 // Gamepads are polled only while one is connected.
@@ -352,14 +378,47 @@ new ResizeObserver(() => {
   }
 }).observe(canvas);
 
-// Report the emulated frame rate once per second.
-let lastFrame = emulator.frameNumber;
-setInterval(() => {
-  const frame = emulator.frameNumber;
-  const frames = frame >= lastFrame ? Number(frame - lastFrame) : 0;
-  lastFrame = frame;
-  ui.fps.textContent = runner.running ? `${frames} fps` : "—";
-}, 1000);
+// Live performance: rolling one-second window, refreshed four times a second.
+let hostCpu = "";
+let cpuPressure = null;
+describeHostCpu().then((text) => {
+  hostCpu = text;
+  ui.hostCpu.textContent = text;
+});
+watchCpuPressure((state) => {
+  cpuPressure = state;
+  ui.pressure.textContent = state;
+  ui.pressure.dataset.state = state;
+}).then((supported) => {
+  for (const element of document.querySelectorAll(".pressure")) element.hidden = !supported;
+});
+
+function updateStats() {
+  const cores = navigator.hardwareConcurrency;
+  let line1 = "— FPS";
+  let load = "—";
+  if (runner.running) {
+    const { fps, frameMs, load: share } = meter.sample();
+    line1 = `${fps.toFixed(1)} FPS · ${frameMs.toFixed(1)} ms`;
+    load = `${Math.round(share * 100)}%`;
+    ui.fps.textContent = `${fps.toFixed(1)} (${frameMs.toFixed(2)} ms/frame)`;
+    ui.emuCpu.textContent = `${load} of one core`;
+  } else {
+    ui.fps.textContent = ui.emuCpu.textContent = "—";
+  }
+  if (!ui.stats.hidden) {
+    const host = [cores ? `${cores} cores` : hostCpu, cpuPressure].filter(Boolean).join(" · ");
+    ui.stats.textContent = `${line1}\nCPU ${load}${host ? ` · ${host}` : ""}`;
+  }
+}
+setInterval(updateStats, 250);
+
+ui.showStats.addEventListener("change", () => {
+  ui.stats.hidden = !ui.showStats.checked;
+  localStorage.setItem("webfc.showStats", String(ui.showStats.checked));
+  updateStats();
+  ui.showStats.blur();
+});
 
 setCartridge(findGame(DEMO_ID).title);
 showMessage("Pick a free game under Games, or open your own .nes file.");
